@@ -4,7 +4,7 @@ Practice with redis
 """
 import uuid
 import redis
-from typing import Union
+from typing import Callable, Union
 
 
 class Cache:
