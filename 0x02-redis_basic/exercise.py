@@ -5,6 +5,7 @@ Practice with redis
 import uuid
 import redis
 from typing import Union
+from functools import wraps
 
 
 def count_calls(method: Callable) -> Callable:
