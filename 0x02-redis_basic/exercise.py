@@ -36,11 +36,11 @@ def call_history(method: Callable) -> Callable:
         """
         inputs_key = method.__qualname__ + ":inputs"
         outputs_key = method.__qualname__ + ":outputs"
-        
+
         self._redis.rpush(inputs_key, str(args))
         output = method(self, *args, **kwargs)
         self._redis.rpush(outputs_key, str(output))
-        
+
         return output
     return wrapper
 
@@ -82,7 +82,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
-    
+
     @count_calls
     @call_history
     def store(self, data: Union[str, bytes, int, float]) -> str:
@@ -92,6 +92,7 @@ class Cache:
         key = str(uuid.uuid4())
         self._redis.set(key, data)
         return key
+
 
     def get(self, key: str, fn: Callable = None) -> Union[str, bytes, int, float, None]:
         """
