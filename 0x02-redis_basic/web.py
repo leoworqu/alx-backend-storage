@@ -1,37 +1,49 @@
 #!/usr/bin/env python3
-"""web module
 """
-import redis
+web module
+"""
 import requests
-from typing import Callable
+import time
 from functools import wraps
 
-r = redis.Redis()
+
+CACHE = {}
 
 
-def count_requests(method: Callable) -> Callable:
+def cache_decorator(func):
     """
     count requests decorate
     """
-    @wraps(method)
+    @wraps(func)
     def wrapper(url):
         """
         Wrapper for decorator functionality
         """
-        r.incr(f"count:{url}")
-        cache_html = r.get(f"cached:{url}")
-        if cache_html:
-            return cache_html.decode('utf-8')
-        html = method(url)
-        r.setex(f"cached:{url}", 10, html)
-        return html
+        if url in CACHE and time.time() - CACHE[url]["timestamp"] < 10:
+            CACHE[url]["count"] += 1
+            return CACHE[url]["content"]
+        else:
+            content = func(url)
+            CACHE[url] = {
+                "content": content,
+                "timestamp": time.time(),
+                "count": 1
+            }
+            return content
     return wrapper
 
-
-@count_requests
+@cache_decorator
 def get_page(url: str) -> str:
     """
     get page method
     """
-    request = requests.get(url)
-    return request.text
+    response = requests.get(url)
+    return response.text
+
+
+if __name__ == "__main__":
+    url = "http://slowwly.robertomurray.co.uk/delay/1000/url/http://www.example.com"
+    print(get_page(url))
+    print(get_page(url))
+    time.sleep(10)
+    print(get_page(url))
